@@ -1,0 +1,53 @@
+﻿@model IEnumerable<CasaPopular.Domain.Entities.Familia>
+
+@{
+    ViewData["Title"] = "ListaFamilia";
+}
+
+<h1>ListaFamilia</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Nome
+            </th>
+            <th>
+                DataNascimento
+            </th>
+            <th>
+                Tipo
+            </th>
+            <th>
+                Renda
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+
+            foreach (var pessoa in item.Pessoas)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => pessoa.Nome)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => pessoa.DataNascimento)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => pessoa.Tipo)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => pessoa.RendaPessoa.Valor)
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

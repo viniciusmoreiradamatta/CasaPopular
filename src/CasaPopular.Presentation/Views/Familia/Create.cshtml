@@ -1,0 +1,205 @@
+﻿@model CasaPopular.Application.ViewModels.CadastroFamiliaViewModel
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>CadastroFamiliaViewModel</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Status" class="control-label"></label>
+                <select asp-for="Status" class="form-control">
+                    <option value="">Selecione</option>
+                    <option value="0">Cadastro Valido</option>
+                    <option value="1">Ja Possui Casa</option>
+                    <option value="2">Ja Selecionada</option>
+                    <option value="3">Cadastro Imcompleto</option>
+                </select>
+                <span asp-validation-for="Status" class="text-danger"></span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="row">
+            <div class="row col-sm-12">
+                <div class="form-group col-sm-6">
+                    <h4 class="contact-title">Adicionar pessoa</h4>
+                </div>
+                <div class="col-sm-2">
+                    <div id="btnAdicionarPessoa" class="btn btn-primary">
+                        +
+                    </div>
+                </div>
+            </div>
+
+            <div id="divPessoas" class="row col-sm-12">
+            </div>
+            <div class="col-sm-12 form-group mt-3">
+                <button type="submit" id="btnSalvar" class="btn btn-success">Salvar</button>
+            </div>
+        </div>
+        <div id="result"></div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        $(document).ready(function () {
+            HabilitarMascaraValor();
+
+            $('#btnAdicionarPessoa').on('click', () => AdicionarMaisPessoas());
+
+            function HabilitarMascaraValor() {
+                $('.valor').mask('#.##0,00', { reverse: true });
+            }
+
+            function AdicionarMaisPessoas() {
+                let guid = CreateGuid();
+
+                let textoBase = `<div class="row ${guid}">
+                                                                            <div class="col-3">
+                                                                                <div class="form-group">
+                                                                                    <input class="form-control " name="nome" data-guid="${guid}"  placeholder="Nome" id="nome_${guid}" />
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-3">
+                                                                                <div class="form-group">
+                                                                                    <input class="form-control w-100 valor" data-guid="${guid}"  name="Renda_${guid}" placeholder="Renda" id="Renda_${guid}" />
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-3">
+                                                                                <div class="form-group">
+                                                                                    <input class="form-control" name="DataNascimento_${guid}" data-guid="${guid}"  placeholder="Data Nascimento" type="date" id="DataNascimento_${guid}" />
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-2">
+                                                                                <div class="form-group">
+                                                                                    <select asp-for="Status" data-guid="${guid}" id='ddlTipoPessoa_${guid}' name="Tipo_${guid}"  class="form-control">
+                                                                                        <option value="">Selecione</option>
+                                                                                        <option value="0">Pretendente</option>
+                                                                                        <option value="1">Conjuge</option>
+                                                                                        <option value="2">Dependente</option>
+                                                                                    </select>
+                                                                                </div>
+                                                                            </div>
+                                                                               <div class="col-sm-1 ${guid}">
+                                                                                   <div id="btnRemover" data-id="${guid}" class="btn btn-danger remover">
+                                                                                       -
+                                                                                   </div>
+                                                                               </div>
+                                                                        </div>`;
+
+                $('#divPessoas').append(textoBase);
+
+                HabilitarMascaraValor();
+
+                HabilitarEventoExcluir();
+            }
+
+            function HabilitarEventoExcluir() {
+                $('.remover').off().on('click', (e) => {
+                    let id = e.currentTarget.dataset.id;
+
+                    $(`.${id}`).remove();
+                });
+            }
+
+        });
+
+        function CreateGuid() {
+            function _p8(s) {
+                var p = (Math.random().toString(16) + "000000000").substr(2, 8);
+                return s ? "-" + p.substr(0, 4) + "-" + p.substr(4, 4) : p;
+            }
+
+            return _p8() + _p8(true) + _p8(true) + _p8();
+        }
+
+        function MontarListaPessoas() {
+            let ids = $('[data-guid]');
+
+            let arr = []
+            $.each(ids, (i, item) => {
+                arr.push(item.dataset.guid)
+            });
+
+            let uniques = arr.filter(onlyUnique);
+
+            let listaPessoas = []
+
+            $.each(uniques, (i, item) => {
+
+                let Nome = $(`#nome_${item}`).val();
+                let id = `#Renda_${item}`;
+                let Valor = $(id).val().replace('.', '').replace(',', '.');
+                //Valor = $(id).val().replace('.', '').replace(',', '.');
+
+                let DataNascimento = $(`#DataNascimento_${item}`).val();
+                let tipo = $(`#ddlTipoPessoa_${item}`).val();
+
+                debugger
+                if (Nome != '' && Valor != '') {
+                    let pessoa = { Nome, Valor, DataNascimento, tipo };
+
+                    listaPessoas.push(pessoa)
+                }
+            });
+
+            return listaPessoas;
+        }
+
+        async function SalvarFamilia() {
+
+            let Pessoas = await MontarListaPessoas();
+
+            let Status = $('#Status').val();
+
+            let cadastrar = { Status, Pessoas }
+
+            let param = { "cadastrar": cadastrar }
+
+            let result = await RequestAjax('Create', JSON.stringify(cadastrar), 'POST');
+
+            if (result == true)
+                window.location.href = 'index'
+        }
+
+        $('#btnSalvar').on('click', () => {
+            SalvarFamilia();
+        });
+
+        async function RequestAjax(url, params, metodo) {
+            metodo = metodo == undefined || metodo == "" ? "GET" : metodo;
+
+            let result;
+
+            await $.ajax({
+                url: url,
+                data: params,
+                contentType: "application/json; charset=utf-8",
+                method: metodo,
+                async: true
+            }).done(async function (data) {
+                result = data;
+            });
+
+            return result;
+        }
+
+        function onlyUnique(value, index, self) {
+            return self.indexOf(value) === index;
+        }
+    </script>
+
+}
