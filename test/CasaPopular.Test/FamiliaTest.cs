@@ -27,10 +27,8 @@ namespace CasaPopular.Test
                 Dependente
             };
 
-            Familia Familia = new(0, lista);
-
             //Act && Assert
-            Assert.Throws<Exception>(() => Familia.Validar());
+            Assert.Throws<Exception>(() => new Familia(0, lista));
         }
 
         [Fact]

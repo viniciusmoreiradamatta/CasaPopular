@@ -17,6 +17,8 @@ namespace CasaPopular.Domain.Entities
         {
             Status = (Status)status;
             _Pessoas = pessoas;
+
+            Validar();
         }
 
         public Status Status { get; private set; }
@@ -88,6 +90,9 @@ namespace CasaPopular.Domain.Entities
 
         public void ContemplarFamilia()
         {
+            if (Status != Status.CadastroValido)
+                throw new Exception("Nao é possivel comtemplar a familia, verifique o cadastro");
+
             Status = Status.JaSelecionada;
         }
     }
